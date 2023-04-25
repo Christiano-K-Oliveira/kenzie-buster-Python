@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import User
 from rest_framework.validators import UniqueValidator
+import ipdb
 
 
 class RegistroSerializer(serializers.Serializer):
@@ -23,7 +24,28 @@ class RegistroSerializer(serializers.Serializer):
 
         return User.objects.create_user(**validated_data)
 
+    def update(self, instance, validated_data: dict) -> User:
+        for key, value in validated_data.items():
+            if key == 'password':
+                instance.set_password(value)
+            else:
+                setattr(instance, key, value)
+
+        instance.save()
+
+        return instance
+
 
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField(write_only=True)
     password = serializers.CharField(write_only=True)
+
+
+# class UsersIdSerializer(serializers.Serializer):
+#     def update(self, instance, validated_data: dict) -> User:
+#         for key, value in validated_data.items():
+#             setattr(instance, key, value)
+
+#         instance.save()
+
+#         return instance

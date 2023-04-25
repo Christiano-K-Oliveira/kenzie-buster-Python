@@ -5,7 +5,8 @@ from .serializers import RegistroSerializer, LoginSerializer
 from users.models import User
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
-import ipdb
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from .permissions import IsUserId, IsCustom
 
 
 # Create your views here.
@@ -42,3 +43,27 @@ class LoginView(APIView):
         }
 
         return Response(token_dict, status.HTTP_200_OK)
+
+
+class UsersIdView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsUserId]
+
+    def get(self, request: Request, user_id: int) -> Response:
+        user = get_object_or_404(User, pk=user_id)
+        self.check_object_permissions(request, user)
+
+        serializer = RegistroSerializer(user)
+
+        return Response(serializer.data, status.HTTP_200_OK)
+
+    def patch(self, request: Request, user_id: int) -> Response:
+        user = get_object_or_404(User, pk=user_id)
+        self.check_object_permissions(request, user)
+
+        serializer = RegistroSerializer(instance=user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        serializer.save()
+
+        return Response(serializer.data, status.HTTP_200_OK)
